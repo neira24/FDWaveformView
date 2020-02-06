@@ -13,6 +13,10 @@ final class FDAudioContext {
     /// Total number of samples in loaded asset
     public let totalSamples: Int
     
+    public var startIndexPosition: Int
+    
+    public var endIndexPosition: Int
+    
     /// Loaded asset
     public let asset: AVAsset
     
@@ -24,6 +28,9 @@ final class FDAudioContext {
         self.totalSamples = totalSamples
         self.asset = asset
         self.assetTrack = assetTrack
+        self.startIndexPosition = -1
+        self.endIndexPosition = -1
+        
     }
     
     public static func load(fromAudioURL audioURL: URL, completionHandler: @escaping (_ audioContext: FDAudioContext?) -> ()) {

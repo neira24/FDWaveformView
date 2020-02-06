@@ -26,6 +26,7 @@ class ViewController: UIViewController {
             let random = Int(arc4random()) % self.waveform.totalSamples
             self.waveform.highlightedSamples = 0 ..< random
         })
+        
     }
     
     @IBAction func doZoomIn() {

@@ -49,6 +49,16 @@ open class FDWaveformView: UIView {
     open var totalSamples: Int {
         return audioContext?.totalSamples ?? 0
     }
+    open var startIndexPosition: Int {
+           return audioContext?.startIndexPosition ?? -1
+    }
+    
+    open var endIndexPosition: Int {
+           return audioContext?.endIndexPosition ?? -1
+    }
+    
+    
+    
 
     /// The samples to be highlighted in a different color
     /*@IBInspectable*/ open var highlightedSamples: CountableRange<Int>? = nil {
@@ -78,7 +88,7 @@ open class FDWaveformView: UIView {
     /// Whether to allow tap and pan gestures to change highlighted range
     /// Pan gives priority to `doesAllowScroll` if this and that are both `true`
     /*@IBInspectable*/ open var doesAllowScrubbing = true
-
+    
     /// Whether to allow pinch gesture to change zoom
     /*@IBInspectable*/ open var doesAllowStretch = true
 
@@ -123,17 +133,17 @@ open class FDWaveformView: UIView {
     /// If this portion is not available then a re-render will be performed
     private var horizontalBleedAllowed = 0.1 ... 3.0
 
-    /// The number of horizontal pixels to render per visible pixel on the screen (for anti-aliasing)
+    /// The number of horizontal pixels to render per visible pixel on the screen (for antialiasing)
     private var horizontalOverdrawTarget = 3.0
 
-    /// The required number of horizontal pixels to render per visible pixel on the screen (for anti-aliasing)
+    /// The required number of horizontal pixels to render per visible pixel on the screen (for antialiasing)
     /// If this number is not available then a re-render will be performed
     private var horizontalOverdrawAllowed = 1.5 ... 5.0
 
-    /// The number of vertical pixels to render per visible pixel on the screen (for anti-aliasing)
+    /// The number of vertical pixels to render per visible pixel on the screen (for antialiasing)
     private var verticalOverdrawTarget = 2.0
 
-    /// The required number of vertical pixels to render per visible pixel on the screen (for anti-aliasing)
+    /// The required number of vertical pixels to render per visible pixel on the screen (for antialiasing)
     /// If this number is not available then a re-render will be performed
     private var verticalOverdrawAllowed = 1.0 ... 3.0
 
@@ -189,7 +199,7 @@ open class FDWaveformView: UIView {
         return window?.screen.scale ?? UIScreen.main.scale
     }
 
-    /// Waveform type for rendering waveforms
+    /// Waveform type for rending waveforms
     //TODO: make this public after reconciling FDWaveformView.WaveformType and FDWaveformType
     var waveformRenderType: FDWaveformType {
         get {
@@ -240,7 +250,7 @@ open class FDWaveformView: UIView {
     }
 
     /// Indicates the gesture begun lastly.
-    /// This helps to determine which of the continuous interactions should be active, pinching or panning.
+    /// This helps to determine which of continuous interaction should be active, pinching or panning.
     /// pinchRecognizer
     fileprivate var firstGesture = PressType.none
 
@@ -290,7 +300,7 @@ open class FDWaveformView: UIView {
         inProgressWaveformRenderOperation?.cancel()
     }
 
-    /// If the cached waveform or in-progress waveform is insufficient for the current frame
+    /// If the cached waveform or in progress waveform is insufficient for the current frame
     fileprivate func cacheStatus() -> CacheStatus {
         guard !renderForCurrentAssetFailed else { return .notDirty(cancelInProgressRenderOperation: true) }
 
@@ -502,13 +512,13 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
         case .began:
             if firstGesture == .none {
                 // Set firstGesture to .pinch only if panning gesture is not active.
-                // This enables the user to repetitively pan and zoom action.
-                // If we set firstGesture to .pinch in any state then the user becomes unable
-                // to pan until they release all fingers from the view.
+                // This enables the user to repetitive pan and zoom action.
+                // If we set firstGesture to .pinch in any state then the user became unable
+                // to panning until they release all of fingers from the view.
                 firstGesture = .pinch
             }
         case .ended, .cancelled:
-            // This happens only if panning has not started.
+            // This happens only if panning had not started.
             firstGesture = .none
         default:
             break
@@ -527,7 +537,7 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
     @objc func handlePanGesture(_ recognizer: UIPanGestureRecognizer) {
         guard !zoomSamples.isEmpty else { return }
 
-        // This method is called even if the user began with pinching.
+        // This method is called even the user began with pinching.
 
         switch recognizer.state {
         case .began:
@@ -567,18 +577,62 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
         }
         else if doesAllowScrubbing {
             let rangeSamples = CGFloat(zoomSamples.count)
-            let scrubLocation = min(max(recognizer.location(in: self).x, 0), frame.width)    // clamp location within the frame
-            highlightedSamples = 0 ..< Int((CGFloat(zoomSamples.startIndex) + rangeSamples * scrubLocation / bounds.width))
-            delegate?.waveformDidEndScrubbing?(self)
+                               if(startIndexPosition>0 && endIndexPosition>0){
+                                   audioContext?.startIndexPosition = -1
+                                   audioContext?.endIndexPosition = -1
+                               }
+                               if(startIndexPosition>0 && endIndexPosition == -1){
+                                   audioContext?.endIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
+                                   if(startIndexPosition>endIndexPosition){
+                                        highlightedSamples = endIndexPosition ..< startIndexPosition
+                                   }else{
+                                        highlightedSamples = startIndexPosition ..< endIndexPosition
+                                   }
+                                  
+                                  
+                               }
+                               if(startIndexPosition == -1){
+                                   audioContext?.startIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
+                                   highlightedSamples = startIndexPosition ..< startIndexPosition
+                               }
+                                   
+
+
+                               delegate?.waveformDidEndScrubbing?(self)
         }
     }
 
     @objc func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
-        if doesAllowScrubbing {
-            let rangeSamples = CGFloat(zoomSamples.count)
-            highlightedSamples = 0 ..< Int((CGFloat(zoomSamples.startIndex) + rangeSamples * recognizer.location(in: self).x / bounds.width))
-            delegate?.waveformDidEndScrubbing?(self)
-        }
+//        if doesAllowScrubbing {
+//            let rangeSamples = CGFloat(zoomSamples.count)
+//            highlightedSamples = 0 ..< Int((CGFloat(zoomSamples.startIndex) + rangeSamples * recognizer.location(in: self).x / bounds.width))
+//            delegate?.waveformDidEndScrubbing?(self)
+//        }
+            if doesAllowScrubbing {
+                    let rangeSamples = CGFloat(zoomSamples.count)
+                    if(startIndexPosition>0 && endIndexPosition>0){
+                        audioContext?.startIndexPosition = -1
+                        audioContext?.endIndexPosition = -1
+                    }
+                    if(startIndexPosition>0 && endIndexPosition == -1){
+                        audioContext?.endIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
+                        if(startIndexPosition>endIndexPosition){
+                             highlightedSamples = endIndexPosition ..< startIndexPosition
+                        }else{
+                             highlightedSamples = startIndexPosition ..< endIndexPosition
+                        }
+                       
+                       
+                    }
+                    if(startIndexPosition == -1){
+                        audioContext?.startIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
+                        highlightedSamples = startIndexPosition ..< startIndexPosition
+                    }
+                        
+
+
+                    delegate?.waveformDidEndScrubbing?(self)
+                }
     }
 }
 
@@ -596,17 +650,35 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
     /// An audio file was loaded
     @objc optional func waveformViewDidLoad(_ waveformView: FDWaveformView)
 
-    /// The panning gesture began
+    /// The panning gesture did begin
     @objc optional func waveformDidBeginPanning(_ waveformView: FDWaveformView)
 
-    /// The panning gesture ended
+    /// The panning gesture did end
     @objc optional func waveformDidEndPanning(_ waveformView: FDWaveformView)
 
-    /// The scrubbing gesture ended
+    /// The scrubbing gesture did end
     @objc optional func waveformDidEndScrubbing(_ waveformView: FDWaveformView)
 }
 
 //MARK -
+
+extension Comparable {
+
+    func clamped(from lowerBound: Self, to upperBound: Self) -> Self {
+        return min(max(self, lowerBound), upperBound)
+    }
+
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        return min(max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+extension Strideable where Self.Stride: SignedInteger
+{
+    func clamped(to range: CountableClosedRange<Self>) -> Self {
+        return min(max(self, range.lowerBound), range.upperBound)
+    }
+}
 
 extension CountableRange where Bound: Strideable {
 
