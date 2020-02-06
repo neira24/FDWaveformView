@@ -28,6 +28,7 @@ final class FDAudioContext {
         self.totalSamples = totalSamples
         self.asset = asset
         self.assetTrack = assetTrack
+        //selection start and end pos
         self.startIndexPosition = -1
         self.endIndexPosition = -1
         
