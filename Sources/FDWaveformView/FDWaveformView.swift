@@ -613,6 +613,9 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
                     if(startIndexPosition>0 && endIndexPosition>0){
                         audioContext?.startIndexPosition = -1
                         audioContext?.endIndexPosition = -1
+                        self.subviews.last?.removeFromSuperview();              self.willRemoveSubview(self.subviews.last!)
+                         self.subviews.last?.removeFromSuperview()
+                        self.willRemoveSubview(self.subviews.last!)
                     }
                     if(startIndexPosition>0 && endIndexPosition == -1){
                         audioContext?.endIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
@@ -621,12 +624,21 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
                         }else{
                              highlightedSamples = startIndexPosition ..< endIndexPosition
                         }
+                        let rect = CGRect(x: Int(recognizer.location(in: self).x), y: 0, width:5 , height: Int(self.bounds.size.height))
+                        let lineview=UIView(frame:rect)
+                        lineview.backgroundColor=UIColor.red
+                        self.addSubview(lineview)
+                        
                        
                        
                     }
                     if(startIndexPosition == -1){
                         audioContext?.startIndexPosition=Int(rangeSamples * recognizer.location(in: self).x / bounds.width);
                         highlightedSamples = startIndexPosition ..< startIndexPosition
+                            let rect = CGRect(x: Int(recognizer.location(in: self).x), y: 0, width:5 , height: Int(self.bounds.size.height))
+                                           let lineview=UIView(frame:rect)
+                                           lineview.backgroundColor=UIColor.red
+                                           self.addSubview(lineview)
                     }
                         
 
