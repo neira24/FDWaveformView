@@ -108,13 +108,20 @@ open class FDWaveformView: UIView {
             setNeedsLayout()
         }
     }
-
+    
+    var markerBarColor:UIColor=UIColor.red
     /// The color of the waveform
     @IBInspectable open var wavesColor = UIColor.black {
         didSet {
             imageView.tintColor = wavesColor
         }
     }
+    
+    @IBInspectable open var markerColor = UIColor.red {
+          didSet {
+              markerBarColor = markerColor
+          }
+      }
 
     /// The color of the highlighted waveform (see `progressSamples`
     @IBInspectable open var progressColor = UIColor.blue {
@@ -626,7 +633,7 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
                         }
                         let rect = CGRect(x: Int(recognizer.location(in: self).x), y: 0, width:5 , height: Int(self.bounds.size.height))
                         let lineview=UIView(frame:rect)
-                        lineview.backgroundColor=UIColor.red
+                        lineview.backgroundColor=markerBarColor
                         self.addSubview(lineview)
                         
                        
@@ -637,7 +644,7 @@ extension FDWaveformView: UIGestureRecognizerDelegate {
                         highlightedSamples = startIndexPosition ..< startIndexPosition
                             let rect = CGRect(x: Int(recognizer.location(in: self).x), y: 0, width:5 , height: Int(self.bounds.size.height))
                                            let lineview=UIView(frame:rect)
-                                           lineview.backgroundColor=UIColor.red
+                                           lineview.backgroundColor=markerBarColor
                                            self.addSubview(lineview)
                     }
                         
